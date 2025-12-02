@@ -3,14 +3,14 @@ import { useContext, useState, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { PlayerContext } from './context/PlayerContext';
 import Sidebar from './components/Sidebar';
-import Display from './components/Display';
+// import Display from './components/Display';
 import Player from './components/Player';
-import NowPlaying from './components/NowPlaying';
-import NowPlayingSidebar from './components/NowPlayingSidebar';
-import QueueSidebar from './components/QueueSidebar';
-import SelectPlaylistModal from './components/SelectPlaylistModal';
-import ErrorBoundary from './components/ErrorBoundary';
-import Search from './components/Search';
+// import NowPlaying from './components/NowPlaying';
+// import NowPlayingSidebar from './components/NowPlayingSidebar';
+// import QueueSidebar from './components/QueueSidebar';
+// import SelectPlaylistModal from './components/SelectPlaylistModal';
+// import ErrorBoundary from './components/ErrorBoundary';
+// import Search from './components/Search';
 
 const App = () => {
   const {audioRef, track, songsData, showNowPlaying, showFullscreen, showQueue, showSelectPlaylist, setShowSelectPlaylist} = useContext(PlayerContext);
