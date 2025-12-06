@@ -118,7 +118,6 @@ const addSong = async (req, res) => {
             audioFile = req.files.audio[0];
             const { fileUrl: audioUrl, duration } = await uploadAudioFile(audioFile);
 
-            // Handle image upload for YouTube URL option (only when not using Spotify URL)
             let imageUrl = "";
             if (!req.body.spotifyUrl) {  // Only handle image if not using Spotify URL
                 if (req.body.useAlbumImage === 'true' && req.body.albumId) {
