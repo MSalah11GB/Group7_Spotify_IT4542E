@@ -139,6 +139,40 @@ const PlaylistManagement = ({ playlistId, onClose }) => {
     }
   };
 
+  const handleUpdatePlaylist = async (e) => {
+    e.preventDefault();
+
+    try {
+      const formData = new FormData();
+      formData.append('id', playlistId);
+      formData.append('name', playlistDetails.name);
+      formData.append('description', playlistDetails.description);
+      formData.append('isPublic', playlistDetails.isPublic);
+      formData.append('clerkId', user?.id || '');
+
+      if (playlistDetails.image) {
+        formData.append('image', playlistDetails.image);
+      }
+
+      const response = await axios.post(`${url}/api/playlist/update`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.success) {
+        // Reload playlist data
+        loadPlaylistData();
+        setShowEditModal(false);
+      } else {
+        setError(response.data.message || 'Failed to update playlist');
+      }
+    } catch (error) {
+      console.error('Error updating playlist:', error);
+      setError('An unexpected error occurred');
+    }
+  };
+
   return (
     <div className="text-white">
       {/* Playlist Management Header */}
@@ -266,7 +300,7 @@ const PlaylistManagement = ({ playlistId, onClose }) => {
               </button>
             </div>
 
-            <form onSubmit={__}>
+            <form onSubmit={handleUpdatePlaylist}>
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">Name</label>
                 <input
