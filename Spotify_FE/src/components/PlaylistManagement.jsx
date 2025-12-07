@@ -71,6 +71,39 @@ const PlaylistManagement = ({ playlistId, onClose }) => {
     }
   };
 
+  const handleDragEnd = async (result) => {
+    if (!result.destination) return;
+
+    const items = Array.from(songs);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    setSongs(items);
+
+    // Update the playlist in the context
+    if (currentPlaylist) {
+      const updatedPlaylist = {
+        ...currentPlaylist,
+        songs: items
+      };
+      setCurrentPlaylist(updatedPlaylist);
+    }
+
+    // Save the new order to the backend
+    try {
+      await axios.post(`${url}/api/playlist/reorder-songs`, {
+        playlistId,
+        songIds: items.map(song => song._id),
+        clerkId: user?.id || ''
+      });
+    } catch (error) {
+      console.error('Error saving song order:', error);
+      // Revert to original order if save fails
+      loadPlaylistData();
+    }
+  };
+
+
   return (
     <div className="text-white">
       {/* Playlist Management Header */}
@@ -118,7 +151,7 @@ const PlaylistManagement = ({ playlistId, onClose }) => {
       </div>
 
       {/* Drag and Drop Song List */}
-      <DragDropContext onDragEnd={__}>
+      <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId="songs">
           {(provided) => (
             <div
