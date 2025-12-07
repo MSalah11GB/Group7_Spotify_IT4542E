@@ -114,6 +114,31 @@ const PlaylistManagement = ({ playlistId, onClose }) => {
     }
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setPlaylistDetails(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPlaylistDetails(prev => ({
+        ...prev,
+        image: file
+      }));
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <div className="text-white">
       {/* Playlist Management Header */}
@@ -248,7 +273,7 @@ const PlaylistManagement = ({ playlistId, onClose }) => {
                   type="text"
                   name="name"
                   value={playlistDetails.name}
-                  onChange={__}
+                  onChange={handleInputChange}
                   className="w-full p-3 bg-[#3e3e3e] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
                   required
                   placeholder="My Awesome Playlist"
@@ -260,7 +285,7 @@ const PlaylistManagement = ({ playlistId, onClose }) => {
                 <textarea
                   name="description"
                   value={playlistDetails.description}
-                  onChange={__}
+                  onChange={handleInputChange}
                   className="w-full p-3 bg-[#3e3e3e] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
                   rows="3"
                   placeholder="Add an optional description"
@@ -305,7 +330,7 @@ const PlaylistManagement = ({ playlistId, onClose }) => {
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={__}
+                        onChange={handleImageChange()}
                         className="hidden"
                       />
                     </label>
