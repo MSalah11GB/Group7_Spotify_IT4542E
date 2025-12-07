@@ -103,6 +103,16 @@ const PlaylistManagement = ({ playlistId, onClose }) => {
     }
   };
 
+  const handleRemoveSong = async (songId) => {
+    try {
+      const result = await removeSongFromPlaylist(playlistId, songId, user?.id || '');
+      if (result.success) {
+        setSongs(songs.filter(song => song._id !== songId));
+      }
+    } catch (error) {
+      console.error('Error removing song:', error);
+    }
+  };
 
   return (
     <div className="text-white">
@@ -198,7 +208,7 @@ const PlaylistManagement = ({ playlistId, onClose }) => {
                       {/* Remove button */}
                       <button
                         className="text-gray-400 hover:text-white opacity-0 group-hover:opacity-100 p-2 rounded-full hover:bg-[#ffffff1a]"
-                        onClick={__}
+                        onClick={() => handleRemoveSong(song._id)}
                         title="Remove from playlist"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
