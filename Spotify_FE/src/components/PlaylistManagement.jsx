@@ -173,6 +173,74 @@ const PlaylistManagement = ({ playlistId, onClose }) => {
     }
   };
 
+  const handleDeletePlaylist = () => {
+    console.log('Deleting playlist with optimistic update:', playlistId);
+
+    // Close the confirmation modal immediately
+    setShowDeleteConfirm(false);
+
+    // Close the management modal immediately (optimistic)
+    onClose();
+
+    // Navigate back to home immediately (optimistic) - using React Router for instant navigation
+    navigate('/');
+
+    // Fire-and-forget: Start the delete process in background without waiting
+    deletePlaylist(playlistId, user?.id || '').then(result => {
+      if (!result.success) {
+        console.error('Delete failed:', result.message);
+        // Show error notification (could add a toast notification here)
+        // Note: User has already navigated away, so this is just for logging
+      } else {
+        console.log('Playlist deleted successfully');
+      }
+    }).catch(error => {
+      console.error('Error deleting playlist:', error);
+      // Error handling in background
+    });
+  };
+
+  const handleDuplicatePlaylist = async () => {
+    try {
+      // Create a new playlist with the same songs
+      const formData = new FormData();
+      formData.append('name', `${playlistDetails.name} (Copy)`);
+      formData.append('description', playlistDetails.description);
+      formData.append('clerkId', user?.id || '');
+
+      const response = await axios.post(`${url}/api/playlist/create`, formData);
+
+      if (response.data.success) {
+        const newPlaylistId = response.data.playlist._id;
+
+        // Add all songs to the new playlist
+        for (const song of songs) {
+          await axios.post(`${url}/api/playlist/add-song`, {
+            playlistId: newPlaylistId,
+            songId: song._id,
+            clerkId: user?.id || ''
+          });
+        }
+
+        // Navigate to the new playlist using React Router for instant navigation
+        navigate(`/playlist/${newPlaylistId}`);
+      } else {
+        setError(response.data.message || 'Failed to duplicate playlist');
+      }
+    } catch (error) {
+      console.error('Error duplicating playlist:', error);
+      setError('An unexpected error occurred');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="text-white">
       {/* Playlist Management Header */}
@@ -419,7 +487,7 @@ const PlaylistManagement = ({ playlistId, onClose }) => {
                 Cancel
               </button>
               <button
-                onClick={__}
+                onClick={handleDeletePlaylist}
                 className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-md flex items-center gap-2 transition-colors"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
