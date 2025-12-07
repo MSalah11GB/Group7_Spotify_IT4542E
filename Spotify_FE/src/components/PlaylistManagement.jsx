@@ -262,7 +262,7 @@ const PlaylistManagement = ({ playlistId, onClose }) => {
           </button>
 
           <button
-            onClick={__}
+            onClick={handleDuplicatePlaylist}
             className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md text-sm transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -273,7 +273,7 @@ const PlaylistManagement = ({ playlistId, onClose }) => {
           </button>
 
           <button
-            onClick={__}
+            onClick={() => setShowDeleteConfirm(true)}
             className="flex items-center gap-2 px-4 py-2 bg-red-700 hover:bg-red-600 rounded-md text-sm transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -432,7 +432,7 @@ const PlaylistManagement = ({ playlistId, onClose }) => {
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={handleImageChange()}
+                        onChange={handleImageChange}
                         className="hidden"
                       />
                     </label>
