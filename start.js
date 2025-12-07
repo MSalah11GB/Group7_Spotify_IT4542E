@@ -7,9 +7,9 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Define paths to each project
-const backendPath = path.join(__dirname, 'Musicify-backend');
-const adminPath = path.join(__dirname, 'Musicify-admin');
-const frontendPath = path.join(__dirname, 'Musicify-frontend');
+const backendPath = path.join(__dirname, 'backend');
+const adminPath = path.join(__dirname, 'Spotify-admin');
+const frontendPath = path.join(__dirname, 'Spotify-FE');
 
 // Function to run npm command in specified directory
 function runCommand(directory, command, args) {
