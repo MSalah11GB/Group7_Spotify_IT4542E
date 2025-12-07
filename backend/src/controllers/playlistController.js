@@ -347,3 +347,340 @@ const deletePlaylist = async (req, res) => {
   }
 };
 
+// Add a song to a playlist
+const addSongToPlaylist = async (req, res) => {
+  try {
+    const { playlistId, songId, clerkId } = req.body;
+
+    if (!playlistId || !songId) {
+      return res.json({
+        success: false,
+        message: "Playlist ID and Song ID are required"
+      });
+    }
+
+    if (!clerkId) {
+      return res.json({
+        success: false,
+        message: "User ID is required"
+      });
+    }
+
+    console.log(`Adding song ${songId} to playlist ${playlistId} by user ${clerkId}`);
+
+    // Find the playlist
+    const playlist = await playlistModel.findById(playlistId);
+    if (!playlist) {
+      console.log(`Playlist not found with ID: ${playlistId}`);
+      return res.json({
+        success: false,
+        message: "Playlist not found"
+      });
+    }
+
+    // Check if the user exists
+    const user = await User.findOne({ clerkId });
+    if (!user) {
+      console.log(`User not found with clerkId: ${clerkId}`);
+      return res.json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Allow any user to add songs to any playlist
+    console.log(`User ${clerkId} is adding a song to playlist ${playlistId}`);
+    console.log(`Playlist privacy: isPublic = ${playlist.isPublic}`);
+    console.log(`Playlist creator: ${playlist.creator}`);
+    console.log(`User ID: ${user._id}`);
+
+    // Check if the playlist is private (explicitly set to false)
+    const isPrivate = playlist.isPublic === false;
+
+    // Check if the user is the creator
+    const isCreator = user._id.toString() === playlist.creator.toString();
+
+    console.log(`Is private playlist: ${isPrivate}`);
+    console.log(`Is creator: ${isCreator}`);
+
+    // If the playlist is private and the user is not the creator, don't allow adding songs
+    if (isPrivate && !isCreator) {
+      console.log(`User ${clerkId} cannot add songs to private playlist ${playlistId} they don't own`);
+      return res.json({
+        success: false,
+        message: "You cannot add songs to private playlists you don't own."
+      });
+    }
+
+    // Check if the song exists
+    const song = await songModel.findById(songId);
+    if (!song) {
+      console.log(`Song not found with ID: ${songId}`);
+      return res.json({
+        success: false,
+        message: "Song not found"
+      });
+    }
+
+    // Ensure songs array is initialized
+    if (!Array.isArray(playlist.songs)) {
+      playlist.songs = [];
+    }
+
+    // Check if the song is already in the playlist
+    const songIdStr = songId.toString();
+    const songExists = playlist.songs.some(id => id.toString() === songIdStr);
+
+    if (songExists) {
+      console.log(`Song ${songId} is already in playlist ${playlistId}`);
+      return res.json({
+        success: false,
+        message: "Song is already in the playlist"
+      });
+    }
+
+    // Add the song to the playlist
+    try {
+      console.log(`Adding song with ID: ${songId} to playlist`);
+      console.log(`Song ID type: ${typeof songId}`);
+
+      // Add the song ID directly without conversion
+      playlist.songs.push(songId);
+      playlist.songCount = playlist.songs.length;
+      playlist.updatedAt = Date.now();
+
+      console.log(`Updated playlist songs array: ${playlist.songs}`);
+      console.log(`Updated song count: ${playlist.songCount}`);
+    } catch (err) {
+      console.error(`Error adding song to playlist: ${err.message}`);
+      console.error(err.stack);
+      return res.json({
+        success: false,
+        message: "Error adding song to playlist: " + err.message
+      });
+    }
+
+    await playlist.save();
+
+    console.log(`Successfully added song ${songId} to playlist ${playlistId}`);
+
+    res.json({
+      success: true,
+      message: "Song added to playlist successfully"
+    });
+
+  } catch (error) {
+    console.error("Error adding song to playlist:", error);
+    res.json({
+      success: false,
+      message: "An error occurred while adding the song to the playlist"
+    });
+  }
+};
+
+// Remove a song from a playlist
+const removeSongFromPlaylist = async (req, res) => {
+  try {
+    const { playlistId, songId, clerkId } = req.body;
+
+    if (!playlistId || !songId) {
+      return res.json({
+        success: false,
+        message: "Playlist ID and Song ID are required"
+      });
+    }
+
+    if (!clerkId) {
+      return res.json({
+        success: false,
+        message: "User ID is required"
+      });
+    }
+
+    console.log(`Removing song ${songId} from playlist ${playlistId} by user ${clerkId}`);
+
+    // Find the playlist
+    const playlist = await playlistModel.findById(playlistId);
+    if (!playlist) {
+      console.log(`Playlist not found with ID: ${playlistId}`);
+      return res.json({
+        success: false,
+        message: "Playlist not found"
+      });
+    }
+
+    // Check if the user exists
+    const user = await User.findOne({ clerkId });
+    if (!user) {
+      console.log(`User not found with clerkId: ${clerkId}`);
+      return res.json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Check if the playlist is private (explicitly set to false)
+    const isPrivate = playlist.isPublic === false;
+
+    // Check if the user is the creator
+    const isCreator = user._id.toString() === playlist.creator.toString();
+
+    console.log(`Is private playlist: ${isPrivate}`);
+    console.log(`Is creator: ${isCreator}`);
+
+    // If the playlist is private and the user is not the creator, don't allow removing songs
+    if (isPrivate && !isCreator) {
+      console.log(`User ${clerkId} cannot remove songs from private playlist ${playlistId} they don't own`);
+      return res.json({
+        success: false,
+        message: "You cannot modify private playlists you don't own."
+      });
+    }
+
+    // Ensure songs array is initialized
+    if (!Array.isArray(playlist.songs)) {
+      console.log(`Playlist ${playlistId} has no songs array`);
+      return res.json({
+        success: false,
+        message: "Playlist has no songs"
+      });
+    }
+
+    // Check if the song is in the playlist
+    const songIdStr = songId.toString();
+    const songIndex = playlist.songs.findIndex(id => id.toString() === songIdStr);
+
+    if (songIndex === -1) {
+      console.log(`Song ${songId} is not in playlist ${playlistId}`);
+      return res.json({
+        success: false,
+        message: "Song is not in the playlist"
+      });
+    }
+
+    // Remove the song from the playlist
+    playlist.songs.splice(songIndex, 1);
+    playlist.songCount = playlist.songs.length;
+    playlist.updatedAt = Date.now();
+
+    await playlist.save();
+
+    console.log(`Successfully removed song ${songId} from playlist ${playlistId}`);
+
+    res.json({
+      success: true,
+      message: "Song removed from playlist successfully"
+    });
+
+  } catch (error) {
+    console.error("Error removing song from playlist:", error);
+    res.json({
+      success: false,
+      message: "An error occurred while removing the song from the playlist"
+    });
+  }
+};
+
+// Reorder songs in a playlist
+const reorderSongs = async (req, res) => {
+  try {
+    const { playlistId, songIds, clerkId } = req.body;
+
+    if (!playlistId || !songIds || !Array.isArray(songIds)) {
+      return res.json({
+        success: false,
+        message: "Playlist ID and song IDs array are required"
+      });
+    }
+
+    if (!clerkId) {
+      return res.json({
+        success: false,
+        message: "User ID is required"
+      });
+    }
+
+    console.log(`Reordering songs in playlist ${playlistId} by user ${clerkId}`);
+
+    // Find the playlist
+    const playlist = await playlistModel.findById(playlistId);
+    if (!playlist) {
+      console.log(`Playlist not found with ID: ${playlistId}`);
+      return res.json({
+        success: false,
+        message: "Playlist not found"
+      });
+    }
+
+    // Check if the user exists
+    const user = await User.findOne({ clerkId });
+    if (!user) {
+      console.log(`User not found with clerkId: ${clerkId}`);
+      return res.json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Check if the playlist is private (explicitly set to false)
+    const isPrivate = playlist.isPublic === false;
+
+    // Check if the user is the creator
+    const isCreator = user._id.toString() === playlist.creator.toString();
+
+    console.log(`Is private playlist: ${isPrivate}`);
+    console.log(`Is creator: ${isCreator}`);
+
+    // If the playlist is private and the user is not the creator, don't allow reordering songs
+    if (isPrivate && !isCreator) {
+      console.log(`User ${clerkId} cannot reorder songs in private playlist ${playlistId} they don't own`);
+      return res.json({
+        success: false,
+        message: "You cannot modify private playlists you don't own."
+      });
+    }
+
+    // Ensure all songs in the new order exist in the current playlist
+    const currentSongIds = playlist.songs.map(id => id.toString());
+    const allSongsExist = songIds.every(id => currentSongIds.includes(id.toString()));
+
+    if (!allSongsExist || songIds.length !== currentSongIds.length) {
+      console.log(`Invalid song IDs provided for reordering`);
+      return res.json({
+        success: false,
+        message: "Invalid song IDs provided for reordering"
+      });
+    }
+
+    // Update the playlist with the new song order
+    playlist.songs = songIds;
+    playlist.updatedAt = Date.now();
+
+    await playlist.save();
+
+    console.log(`Successfully reordered songs in playlist ${playlistId}`);
+
+    res.json({
+      success: true,
+      message: "Songs reordered successfully"
+    });
+
+  } catch (error) {
+    console.error("Error reordering songs in playlist:", error);
+    res.json({
+      success: false,
+      message: "An error occurred while reordering songs in the playlist"
+    });
+  }
+};
+
+export {
+  createPlaylist,
+  listPlaylists,
+  getPlaylist,
+  updatePlaylist,
+  deletePlaylist,
+  addSongToPlaylist,
+  removeSongFromPlaylist,
+  reorderSongs
+};
